@@ -3,6 +3,7 @@ import numpy as np
 from glob import glob
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
+from tensorflow.keras.optimizers import Adam
 from PIL import Image
 from matplotlib import pyplot as plt
 import sys
@@ -39,17 +40,27 @@ np.set_printoptions(threshold=sys.maxsize)
 print(train_x[0].shape)
 print(train_y[0].shape)
 
+# view_image(train_x[0])
 train_x = train_x.reshape(train_x.shape[0], IMAGE_DIM[0], IMAGE_DIM[1], 1)
+
+EPOCHS = 1
+LEARNING_RATE = 0.1
 
 # try conv -> pooling -> conv -> pooling -> flatten -> dense -> dense
 # pooling done with MaxPooling2D
+# also use dropout?
 model = Sequential()
 model.add(Conv2D(64, kernel_size=4, activation="relu", input_shape=(IMAGE_DIM[0],IMAGE_DIM[1], 1)))
+model.add(MaxPooling2D(4,4))
 model.add(Conv2D(32, kernel_size=3, activation="relu"))
+model.add(MaxPooling2D(3,3))
 model.add(Flatten())
+model.add(Dense(32, activation='softmax'))
 model.add(Dense(1, activation='softmax'))
 
 print(model.summary())
 
-model.compile(optimizer="adam", loss="binary_crossentropy")
-model.fit(train_x, train_y, epochs=1)
+model.compile(optimizer=Adam(LEARNING_RATE), loss="binary_crossentropy", metrics=["accuracy"])
+model.fit(train_x, train_y, epochs=EPOCHS, shuffle=True)
+
+model.save("lung_model.h5")
